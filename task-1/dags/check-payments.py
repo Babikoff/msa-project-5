@@ -1,6 +1,8 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.email import EmailOperator
+from datetime import timedelta
 import os
 
 from payment_logic import (
@@ -38,10 +40,18 @@ def no_data_alert():
 def end():
     print("ℹ️ Задержек платежей нет. Завершаем DAG.")
 
+dag_default_args = {
+    "retries": 2,
+    "retry_delay": timedelta(seconds=15),
+    "max_retry_delay": timedelta(minutes=2),
+    "retry_exponential_backoff": True,
+}
+
 with DAG(
     dag_id="check-payments",
     schedule="30 18 * * *",
     catchup=False,
+    default_args = dag_default_args,
 ) as dag:
 
     check_data_task = BranchPythonOperator(
@@ -64,6 +74,13 @@ with DAG(
         python_callable=payments_delayed_alert,
     )
 
+    payments_delayed_notification_task = EmailOperator(
+        task_id="payments_delayed_notification",
+        to="admin@my-corporation.com",
+        subject="Обнаружены задержки платежей",
+        html_content="Нам снова не платят!"
+    )
+
     check_delays_task = BranchPythonOperator(
         task_id="check_delays",
         python_callable=check_delays,
@@ -75,3 +92,4 @@ with DAG(
     check_data_task >> [process_task, no_data_task]
     process_task >> check_delays_task
     check_delays_task >> [payments_delayed_task, end_task]
+    payments_delayed_task >> payments_delayed_notification_task

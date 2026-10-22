@@ -58,17 +58,17 @@ def join_orders_with_payments(orders, payments):
         paid_rows         — строки оплаченных заказов со всеми колонками заказа + колонка PaidAt
         matched_order_ids — множество OrderId, для которых найден хотя бы один платёж
     """
-    payments_by_order = {}
+    paid_order_ids = {}
     for p in payments:
-        payments_by_order.setdefault(p["OrderId"], []).append(p)
+        paid_order_ids.setdefault(p["OrderId"], []).append(p)
 
     paid_rows = []
     matched_order_ids = set()
     for o in orders:
         oid = o["OrderId"]
-        if oid in payments_by_order:
+        if oid in paid_order_ids:
             matched_order_ids.add(oid)
-            for p in payments_by_order[oid]:
+            for p in paid_order_ids[oid]:
                 row = dict(o)
                 row["PaidAt"] = p["PaidAt"]
                 paid_rows.append(row)
