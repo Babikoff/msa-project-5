@@ -1,30 +1,42 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.empty import EmptyOperator
 import os
 
-orders_file = "/opt/airflow/data/in/orders.csv"
-payments_file = "/opt/airflow/data/in/payments.csv"
-output_dir = "/opt/airflow/data/out/"
+from payment_logic import (
+    check_data,
+    process_data_logic,
+    check_delays_logic,
+    orders_file,
+    payments_file,
+    output_dir,
+)
 
-# простая проверка: есть ли файл (имитация прихода данных)
-def check_data():
-    if not os.path.exists(orders_file): 
-        print("Нет файла: " + orders_file)
-        return "no_data_alert"
-    elif not os.path.exists(payments_file):
-        print("Нет файла: " + payments_file)
-        return "no_data_alert"
-    else:
-        return "process_data"
 
-def process_data():
-    print("✅ Данные найдены! Обрабатываем файл...")
+def process_data(**context):
+    """Обёртка для Airflow: вызывает бизнес-логику и пушит результат в XCom."""
+    result = process_data_logic(orders_file, payments_file, output_dir)
+    context["ti"].xcom_push(key="process_result", value=result)
+    return result
+
+
+def check_delays(**context):
+    """Ветвление: если есть задержки более 10 дней — алерт, иначе завершение."""
+    ti = context["ti"]
+    result = ti.xcom_pull(task_ids="process_data", key="process_result") or {}
+    return check_delays_logic(result)
+
 
 def payments_delayed_alert():
     print("⚠️ Задержки платежей. Отправляем уведомление в Slack/Email.")
 
+
 def no_data_alert():
     print("⚠️ Данных нет. Отправляем уведомление в Slack/Email.")
+
+
+def end():
+    print("ℹ️ Задержек платежей нет. Завершаем DAG.")
 
 with DAG(
     dag_id="check-payments",
@@ -52,4 +64,14 @@ with DAG(
         python_callable=payments_delayed_alert,
     )
 
-    check_data_task >> [process_task >> payments_delayed_alert, no_data_task]
+    check_delays_task = BranchPythonOperator(
+        task_id="check_delays",
+        python_callable=check_delays,
+    )
+
+    end_task = EmptyOperator(task_id="end")
+
+
+    check_data_task >> [process_task, no_data_task]
+    process_task >> check_delays_task
+    check_delays_task >> [payments_delayed_task, end_task]
