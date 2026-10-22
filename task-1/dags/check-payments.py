@@ -20,6 +20,9 @@ def check_data():
 def process_data():
     print("✅ Данные найдены! Обрабатываем файл...")
 
+def payments_delayed_alert():
+    print("⚠️ Задержки платежей. Отправляем уведомление в Slack/Email.")
+
 def no_data_alert():
     print("⚠️ Данных нет. Отправляем уведомление в Slack/Email.")
 
@@ -44,4 +47,9 @@ with DAG(
         python_callable=no_data_alert,
     )
 
-    check_data_task >> [process_task, no_data_task]
+    payments_delayed_task = PythonOperator(
+        task_id="payments_delayed_alert",
+        python_callable=payments_delayed_alert,
+    )
+
+    check_data_task >> [process_task >> payments_delayed_alert, no_data_task]
