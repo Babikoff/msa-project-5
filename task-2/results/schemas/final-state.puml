@@ -1,0 +1,16 @@
+@startuml tobe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title To Be
+
+System_Boundary(k8s, "k8s") {
+    ContainerDb(pricelist_db, "БД прайс-листов", "Container: PostgreSQL", "Актуальные данные о ценах на товары")
+    Component(pricelist_job, "Агрегатор данных", "CronJob", "")
+}
+
+Component(files, "CSV-файлы", "")
+
+Rel(pricelist_db, pricelist_job, "Данные из таблиц products, categories, clients, client_prices", "SQL join")
+Rel(pricelist_job, files, "Агрегированные данные", "")
+
+@enduml
