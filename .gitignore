@@ -33,7 +33,6 @@ hs_err_pid*
 # Gradle
 .gradle/
 build/
-out/
 bin/
 *.iml
 .gradle

@@ -81,6 +81,13 @@ with DAG(
         html_content="Нам снова не платят!"
     )
 
+    no_data_notification_task = EmailOperator(
+        task_id="no_data_notification",
+        to="admin@my-corporation.com",
+        subject="Нет исходных данных",
+        html_content="Отсутствуют файлы исходных данных. См. доп. инфо в логе Airflow."
+    )
+
     check_delays_task = BranchPythonOperator(
         task_id="check_delays",
         python_callable=check_delays,
@@ -93,3 +100,5 @@ with DAG(
     process_task >> check_delays_task
     check_delays_task >> [payments_delayed_task, end_task]
     payments_delayed_task >> payments_delayed_notification_task
+    no_data_task >> no_data_notification_task
+    
