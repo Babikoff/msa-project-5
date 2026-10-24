@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ExporterJob": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
