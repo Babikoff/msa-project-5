@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ExporterJob")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d39295448c4f4b5f1e76ed6feb91f91972a3f5a8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c7898e8f9125189ca487452b15baf9c82aa85463")]
 [assembly: System.Reflection.AssemblyProductAttribute("ExporterJob")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ExporterJob")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

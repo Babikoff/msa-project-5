@@ -46,3 +46,30 @@
     CREATE INDEX idx_shipments_driver_id       ON shipments(driver_id);
     CREATE INDEX idx_shipments_vehicle_id      ON shipments(vehicle_id);
     CREATE INDEX idx_shipment_events_shipment_id ON shipment_events(shipment_id);
+
+    INSERT INTO clients (id, name) VALUES (1, 'Гипермаркет "Петрович"');
+INSERT INTO clients (id, name) VALUES (2, 'Гипермаркет "Кабаныч"');
+INSERT INTO clients (id, name) VALUES (3, 'Мебельный магазин "Три пуфика"');
+
+INSERT INTO drivers (id, full_name) VALUES (1, 'Иванов И.И.');
+INSERT INTO drivers (id, full_name) VALUES (2, 'Петров П.П.');
+INSERT INTO drivers (id, full_name) VALUES (3, 'Сидоров С.С.');
+
+INSERT INTO vehicles (id, reg_num, descr) values (1, '111', 'Газель'); 
+INSERT INTO vehicles (id, reg_num, descr) values (2, '222', 'Камаз');
+INSERT INTO vehicles (id, reg_num, descr) values (3, '333', 'Scania');
+
+INSERT INTO shipments (id, client_id, driver_id, vehicle_id, source_location, dest_location, status, descr, scheduled_start, scheduled_finish)
+values (1, 1, 1, 1, 'Кокшектау', 'Кудымкар', 'SCHEDULED', 'Рыба', '2026-10-26 14:07:28.935 +0500', '2026-10-30 14:07:28.935 +0500');
+
+INSERT INTO shipments (id, client_id, driver_id, vehicle_id, source_location, dest_location, status, descr, scheduled_start)
+values (2, 2, 2, 2, 'Анкоридж', 'Бобруйск', 'DONE', 'Духи Анкориджа', '2026-09-02 10:00:00.000 +0500');
+
+INSERT INTO shipments (id, client_id, driver_id, vehicle_id, source_location, dest_location, status, descr, scheduled_start, scheduled_finish)
+values (3, 3, 3, 3, 'Барнаул', 'Сывтывкар', 'IN_PROGRESS', 'Сухари', '2026-10-24 14:07:28.935 +0500', '2026-10-30 14:07:28.935 +0500');
+
+INSERT INTO shipment_events (id, shipment_id, event, event_time, descr) values (1, 2, 'START', '2026-09-02 10:00:00.000 -0500', '');
+INSERT INTO shipment_events (id, shipment_id, event, event_time, descr) values (2, 2, 'DELAY', '2026-09-03 10:17:18.435 -0500', 'Спустило колесо');
+INSERT INTO shipment_events (id, shipment_id, event, event_time, descr) values (3, 2, 'FINISH', '2026-10-02 11:00:00.000 +0500', '');
+INSERT INTO shipment_events (id, shipment_id, event, event_time, descr) values (4, 3, 'START', '2026-10-24 14:07:28.935 +0500', '');
+
