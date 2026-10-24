@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: exporter-cronjob
+  namespace: exporter
+spec:
+  schedule: "0 18 * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: exporterjob
+              image: exporterjob:latest
+              imagePullPolicy: Never
+              env:
+                - name: LOGISTICS_DB_CONNECTION_STRING
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-delivery
+                      key: LOGISTICS_DB_CONNECTION_STRING
+                - name: OUTPUT_PATH
+                  value: "/export/"
+              volumeMounts:
+                - name: export
+                  mountPath: /export
+          volumes:
+            - name: export
+              emptyDir: {}
