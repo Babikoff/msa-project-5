@@ -4,6 +4,11 @@ services:
     build:
       context: .
       dockerfile: ExporterJob/Dockerfile
+    environment:
+      - LOGISTICS_DB_CONNECTION_STRING=${LOGISTICS_DB_CONNECTION_STRING}
+      - OUTPUT_PATH=${OUTPUT_PATH} 
+    volumes:
+      - ./export:/export 
     networks:
       - export-net
     depends_on:
