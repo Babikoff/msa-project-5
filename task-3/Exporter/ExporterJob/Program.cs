@@ -14,7 +14,7 @@ await connection.OpenAsync();
 
 var outputFile = outputPath + "report.csv";
 
-Console.WriteLine("Staring data job");
+Console.WriteLine("Staring data job...");
 
 var report = await connection.QueryAsync<ReportRecord>(
 @"
@@ -53,6 +53,11 @@ using (var sw = new StreamWriter(outputFile)) {
 }
 
 Console.WriteLine($"Finished. Number of records created: {count}");
+
+Console.WriteLine($"Waiting..  (for keeping pod alive)");
+await Task.Delay(60*1000);
+Console.WriteLine($"Finished.");
+
 
 record ReportRecord(
     long ClientId,

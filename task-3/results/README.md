@@ -23,4 +23,23 @@
 1. Создать БД и программу импорта в Docker и проверить.
 2. Создать среду MiniKube.
 3. Создать манифест для CronJob.
-4. Проверить работу CronJob в MiniKube. 
+4. Проверить работу CronJob в MiniKube.
+
+## Как запускать ##
+
+Задеплоить в minikube:
+`./deploy.bat`
+
+Для быстрой проверки:
+
+1. Запустить job вручную `kubectl create job --from=cronjob/exporter-cronjob exporter-run -n exporter`
+2. Просмотреть логи по job-у с заданными именем *exporter-run* `kubectl logs -l job-name=exporter-run -n exporter`
+3. Получить список подов в namespace данной системы *exporter* `kubectl get pods -n exporter --show-labels`
+4. Выгрузить созданный job-ом файл: `kubectl cp exporter/exporter-run-vd6xc:/export/report.csv ./report.csv`
+
+## Результаты ##
+
+Запуск job-а вручную в терминале и выгрузка логов:
+![Лог](./screenshots/CronJob-manually.png)
+
+Файл отчёта `report.csv`.
