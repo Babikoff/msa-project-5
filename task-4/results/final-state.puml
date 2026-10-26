@@ -1,0 +1,32 @@
+@startuml c4-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 TradeWare, Initial
+
+Person(employee, "Сотрудник склада", "Использует web-приложение загрузки отчетов")
+
+Container(webApp, "Веб-приложение", "JS, Angular", "Приложение для пользователя, Web-интерфейс")
+
+System_Boundary(backend, "Backend GCP/ComputeEngine") {
+    Container(backendApp, "Бэкенд", "WildFly/Java", "Сервер с Java-приложением содержащим логику обработки отчетов")
+
+    ContainerDb(nomenclatureDb, "БД номенклатуры", "PostgreSQL", "Актуальные данные о наличии товаров на складах")
+    ContainerDb(referenceDb, "БД справочных данных о товарах", "PostgreSQL", "Данные характеристиках товаров, промо-акциях и т.д")
+    ContainerDb(fileStorage, "Файловое хранилище", "Google Cloud Storage", "Загруженные файлы отчетов")
+
+    Container(etl_batch, "ETL batch процессор", "Spring Batch", "Читает два CSV, совмещает данные/обогащает products из loyalty_data, сохраняет агрегат в БД")
+}
+
+Rel(employee, webApp, "использует")
+
+Rel(webApp, backendApp, "Вызывает", "REST API JSON/HTTP")
+
+Rel(backendApp, nomenclatureDb, "Получение и запись данных", "SQL")
+Rel(backendApp, referenceDb, "Получение данных", "SQL")
+Rel(backendApp, fileStorage, "Получение и запись данных", "CVS")
+
+Rel(fileStorage, etl_batch,  "Получает файлы с данными", "CSV")
+Rel(etl_batch, referenceDb,  "Сохраняет сводные данные", "CSV")
+
+
+@enduml

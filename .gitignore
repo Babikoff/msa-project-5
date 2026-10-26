@@ -576,3 +576,5 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+plantuml.jar
