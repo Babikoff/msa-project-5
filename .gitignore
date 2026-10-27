@@ -578,3 +578,4 @@ FodyWeavers.xsd
 *.msp
 
 plantuml.jar
+task-5/complete/src/main/resources/*.txt

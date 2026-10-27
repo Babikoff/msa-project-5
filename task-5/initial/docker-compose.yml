@@ -13,7 +13,7 @@ services:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
 
   elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:8.14.3'
     platform: linux/amd64
     container_name: 'elasticsearch'
     restart: 'unless-stopped'
@@ -28,7 +28,7 @@ services:
       test: 'curl -f http://localhost:9200 || exit 1'
 
   logstash:
-    image: 'docker.elastic.co/logstash/logstash:7.17.28'
+    image: 'logstash:8.14.3'
     container_name: 'logstash'
     restart: 'unless-stopped'
     ports:
@@ -41,7 +41,7 @@ services:
       test: 'curl -f http://localhost:9600 || exit 1'
 
   kibana:
-    image: 'docker.elastic.co/kibana/kibana:7.17.28'
+    image: 'kibana:8.14.3'
     container_name: 'kibana'
     restart: 'unless-stopped'
     ports:
