@@ -43,10 +43,13 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
 
 			log.info("!!! JOB FINISHED! Rows added: {}. Time to verify the results", rowsAdded);
 
+			if (rowsAdded == 0)
+				log.warn("No rows were added. We need to investigate why.");
+
 			jdbcTemplate
 				.query("SELECT productId, productSku, productName, productAmount, productData FROM products", new DataClassRowMapper<>(Product.class))
 				.forEach(person -> log.info("Transformed <{}> in the database.", person));
-	} else if (jobExecution.getStatus() == BatchStatus.FAILED) {
+		} else if (jobExecution.getStatus() == BatchStatus.FAILED) {
 			batchJobFailures.increment();
 			log.error("!!! JOB FAILED! Exit status: {}", jobExecution.getExitStatus());
 		}
