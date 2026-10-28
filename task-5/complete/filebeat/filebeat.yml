@@ -1,13 +1,7 @@
 filebeat.inputs:
-  - type: docker
-    combine_partial: true
-    containers:
-      path: "/usr/share/dockerlogs/data"
-      stream: "stdout"
-      ids:
-        - "*"
-    exclude_files: ['\.gz$']
-    ignore_older: 10m
+  - type: container
+    paths:
+      - '/usr/share/dockerlogs/data/*/*.log'
 
 processors:
   # decode the log field (sub JSON document) if JSON encoded, then maps it's fields to elasticsearch fields
@@ -19,6 +13,13 @@ processors:
   - add_docker_metadata:
       # annotates each event with relevant metadata from Docker containers
       host: "unix:///var/run/docker.sock"
+  - drop_event:
+      when:
+        or:
+          - equals:
+              container.name: "logstash"
+          - equals:
+              container.name: "filebeat"
   - drop_fields:
       # drop the fields below in order to have a cleaner
       fields: ["container.labels.io_buildpacks_build_metadata", "container.labels.io_buildpacks_lifecycle_metadata", "container.labels.io_buildpacks_stack_id"]
@@ -35,7 +36,7 @@ output.logstash:
 logging.level: info
 logging.to_files: false
 logging.to_syslog: false
-loggins.metrics.enabled: false
+logging.metrics.enabled: false
 logging.files:
   path: /var/log/filebeat
   name: filebeat
