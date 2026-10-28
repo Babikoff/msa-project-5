@@ -10,7 +10,6 @@ receivers:
       - to: 'ops@example.com'
         from: 'alertmanager@example.com'
         smarthost: 'mailhog:1025'
-        smtp_require_tls: false
-        smtp_require_hello: false
-        smtp_auth_username: ''
-        smtp_auth_password: ''
+        require_tls: false
+        auth_username: ''
+        auth_password: ''
