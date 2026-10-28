@@ -92,6 +92,26 @@ services:
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "3000" ]
 
+  alertmanager:
+    image: 'prom/alertmanager:v0.28.0'
+    container_name: 'alertmanager'
+    restart: 'unless-stopped'
+    ports:
+      - '9093:9093'
+    volumes:
+      - './alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml'
+    command: --config.file=/etc/alertmanager/alertmanager.yml
+    depends_on:
+      - 'prometheus'
+
+  mailhog:
+    image: 'mailhog/mailhog:v1.0.1'
+    container_name: 'mailhog'
+    restart: 'unless-stopped'
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
   app:
     ports:
       - '8080:8080'
@@ -103,4 +123,4 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: no    

@@ -1,0 +1,38 @@
+groups:
+  - name: batch-processing-alerts
+    rules:
+      - alert: BatchJobFailed
+        expr: batch_job_failures_total > 0
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Batch job failed"
+          description: "The importProductJob batch job has failed."
+
+      - alert: HighJvmHeapUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High JVM heap usage"
+          description: "Heap usage is above 85% for more than 2 minutes."
+
+      - alert: HighCpuUsage
+        expr: process_cpu_usage > 0.80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for more than 2 minutes."
+
+      - alert: NoNewDataAdded
+        expr: batch_job_last_run_rows_added == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No new data added by batch job"
+          description: "The batch job completed successfully but added 0 new rows."
