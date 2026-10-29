@@ -1,0 +1,69 @@
+@startuml c4-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 TradeWare, Initial
+
+Person(employee, "Сотрудник склада", "Использует web-приложение загрузки отчетов")
+Person(techsup, "Сотрудник техподдержки", "Использует средства observability и алерты для поддержки процесса")
+
+Container(webApp, "Веб-приложение", "JS, Angular", "Приложение для пользователя, Web-интерфейс")
+
+System_Boundary(backend, "Backend GCP/ComputeEngine") {
+    Container(backendApp, "Бэкенд", "WildFly/Java", "Сервер с Java-приложением содержащим логику обработки отчетов")
+
+    ContainerDb(nomenclatureDb, "БД номенклатуры", "PostgreSQL", "Актуальные данные о наличии товаров на складах")
+    ContainerDb(referenceDb, "БД справочных данных о товарах", "PostgreSQL", "Данные характеристиках товаров, промо-акциях и т.д")
+    ContainerDb(fileStorage, "Файловое хранилище", "Google Cloud Storage", "Загруженные файлы отчетов")
+
+    Container(etl_batch, "ETL batch процессор", "Spring Batch", "Читает два CSV, совмещает данные/обогащает products из loyalty_data, сохраняет агрегат в БД")
+}
+
+System_Boundary(observability, "Observability tools") {
+    Container(prometheus, "Prometheus", "", "Получает метрики")
+    Container(alertManager, "Prometheus Alert Manager", "", "Триггерит алерты (в почту)")
+    Container(mailServer, "Mailhog", "Корпоративный mail сервер", "Получает алерты")
+    Container(mailClient, "MailClient", "Мобильное почтовое приложение", "Получает алерты")
+    Container(grafana, "Grafana", "", "Показ графиков нагрузки")
+    Container(jaeger, "Open Telemetry сервер", "Jaeger", "Показ трассировок запросов")
+    Container(filebeat, "Filebeat", "", "'Подхватывает' логи с диска")
+    Container(logstash, "Logstash", "", "Форматирует логи для Elasticsearch")
+    Container(elasticsearch, "Elasticsearch", "", "Хранит логи и выполнят команды поиска")
+    Container(kibana, "Kibana", "", "Пользовательский интерфейс для работы с логами в Elastic")
+    Container(webBrowser, "WebBrowser", "", "Веб-браузер сотрудника техподдержки")
+}
+
+Rel(employee, webApp, "использует")
+
+Rel(webApp, backendApp, "Вызывает", "REST API JSON/HTTP")
+
+Rel(backendApp, nomenclatureDb, "Получение и запись данных", "SQL")
+Rel(backendApp, referenceDb, "Получение данных", "SQL")
+Rel(backendApp, fileStorage, "Получение и запись данных", "CVS")
+
+Rel(fileStorage, etl_batch,  "Получает файлы с данными", "CSV")
+Rel(etl_batch, referenceDb,  "Сохраняет сводные данные", "CSV")
+
+' Алерты
+Rel(mailClient, techsup, "Получение алертов")
+Rel(mailServer, mailClient, "Пересылка email алертов")
+Rel(alertManager, mailServer, "Генерация и отправка email алертов")
+Rel(prometheus, alertManager, "Метрики")
+Rel(etl_batch, prometheus, "Метрики")
+
+' Мониторинг
+Rel(techsup, webBrowser, "Просмотр показателей процессов")
+Rel(webBrowser, grafana, "Мониторинг системы по графическим представлениям")
+BiRel(grafana, prometheus, "Получение метрик для графических представлений мониторинга")
+Rel(webBrowser, prometheus, "Мониторинг системы")
+
+' Работа с логами
+Rel(filebeat, etl_batch, "Получение логов")
+Rel(filebeat, logstash, "Передача логов")
+Rel(logstash, elasticsearch, "Загрузка структуированных логов")
+BiRel(kibana, elasticsearch, "Поисковые запросы к логам")
+Rel(webBrowser, kibana, "Поисковые запросы к логам")
+
+Rel(etl_batch, jaeger, "Телеметрия")
+Rel(webBrowser, jaeger, "Просмотр трассировок запросов")
+
+@enduml
