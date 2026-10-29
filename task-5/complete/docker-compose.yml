@@ -132,6 +132,10 @@ services:
     container_name: 'app'
     ports:
       - '8080:8080'
+    environment:
+      - OTEL_SERVICE_NAME=batch-processing
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_SAMPLER=always_on
     depends_on:
       - postgresdb
       - filebeat
