@@ -12,58 +12,58 @@ services:
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
 
-  # elasticsearch:
-  #   image: 'docker.elastic.co/elasticsearch/elasticsearch:8.14.3'
-  #   platform: linux/amd64
-  #   container_name: 'elasticsearch'
-  #   restart: 'unless-stopped'
-  #   ports:
-  #     - '9200:9200'
-  #     - '9300:9300'
-  #   environment:
-  #     - 'discovery.type=single-node'
-  #     - 'xpack.security.enabled=false'
-  #     - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
-  #   healthcheck:
-  #     test: 'curl -f http://localhost:9200 || exit 1'
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:8.14.3'
+    platform: linux/amd64
+    container_name: 'elasticsearch'
+    restart: 'unless-stopped'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    environment:
+      - 'discovery.type=single-node'
+      - 'xpack.security.enabled=false'
+      - 'ES_JAVA_OPTS=-Xms1024m -Xmx1024m'
+    healthcheck:
+      test: 'curl -f http://localhost:9200 || exit 1'
 
-  # logstash:
-  #   image: 'logstash:8.14.3'
-  #   container_name: 'logstash'
-  #   restart: 'unless-stopped'
-  #   ports:
-  #     - '5044:5044'
-  #   volumes:
-  #     - './logstash/pipeline:/usr/share/logstash/pipeline/'
-  #   depends_on:
-  #     - 'elasticsearch'
-  #   healthcheck:
-  #     test: 'curl -f http://localhost:9600 || exit 1'
+  logstash:
+    image: 'logstash:8.14.3'
+    container_name: 'logstash'
+    restart: 'unless-stopped'
+    ports:
+      - '5044:5044'
+    volumes:
+      - './logstash/pipeline:/usr/share/logstash/pipeline/'
+    depends_on:
+      - 'elasticsearch'
+    healthcheck:
+      test: 'curl -f http://localhost:9600 || exit 1'
 
-  # kibana:
-  #   image: 'kibana:8.14.3'
-  #   container_name: 'kibana'
-  #   restart: 'unless-stopped'
-  #   ports:
-  #     - '5601:5601'
-  #   environment:
-  #     - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
-  #   depends_on:
-  #     - 'elasticsearch'
-  #   healthcheck:
-  #     test: 'curl -f http://localhost:5601 || exit 1'
+  kibana:
+    image: 'kibana:8.14.3'
+    container_name: 'kibana'
+    restart: 'unless-stopped'
+    ports:
+      - '5601:5601'
+    environment:
+      - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
+    depends_on:
+      - 'elasticsearch'
+    healthcheck:
+      test: 'curl -f http://localhost:5601 || exit 1'
 
-  # filebeat:
-  #   image: elastic/filebeat:8.14.3
-  #   build: 'filebeat'
-  #   container_name: 'filebeat'
-  #   restart: 'unless-stopped'
-  #   volumes:
-  #     - '/var/run/docker.sock:/var/run/docker.sock'
-  #     - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
-  #   depends_on:
-  #     - 'elasticsearch'
-  #     - 'logstash'
+  filebeat:
+    image: elastic/filebeat:8.14.3
+    build: 'filebeat'
+    container_name: 'filebeat'
+    restart: 'unless-stopped'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
+    depends_on:
+      - 'elasticsearch'
+      - 'logstash'
 
   prometheus:
     image: 'prom/prometheus:v3.4.0'
@@ -77,48 +77,66 @@ services:
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "9090" ]
 
-  grafana:
-    image: 'grafana/grafana:12.0.1'
-    container_name: 'grafana'
-    restart: 'unless-stopped'
+  # grafana:
+  #   image: 'grafana/grafana:12.0.1'
+  #   container_name: 'grafana'
+  #   restart: 'unless-stopped'
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     - 'GF_USERS_ALLOW_SIGN_UP=false'
+  #   volumes:
+  #     - './grafana/provisioning:/etc/grafana/provisioning'
+  #   depends_on:
+  #     - 'prometheus'
+  #   healthcheck:
+  #     test: [ "CMD", "nc", "-z", "localhost", "3000" ]
+
+  # alertmanager:
+  #   image: 'prom/alertmanager:v0.28.0'
+  #   container_name: 'alertmanager'
+  #   restart: 'unless-stopped'
+  #   ports:
+  #     - '9093:9093'
+  #   volumes:
+  #     - './alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml'
+  #   command: --config.file=/etc/alertmanager/alertmanager.yml
+  #   depends_on:
+  #     - 'prometheus'
+
+  # mailhog:
+  #   image: 'mailhog/mailhog:v1.0.1'
+  #   container_name: 'mailhog'
+  #   restart: 'unless-stopped'
+  #   ports:
+  #     - '1025:1025'
+  #     - '8025:8025'
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    hostname: jaeger
     ports:
-      - '3000:3000'
+      - 6831:6831/udp # accept jaeger.thrift in compact Thrift protocol used by most current Jaeger clients
+      - 6832:6832/udp # accept jaeger.thrift in binary Thrift protocol used by Node.js Jaeger client (because thriftrw npm package does not support compact protocol)
+      - 5775:5775/udp # accept zipkin.thrift in compact Thrift protocol (deprecated; only used by very old Jaeger clients, circa 2016)
+      - 5778:5778 # serve configs, sampling strategies
+      - 4317:4317 # OpenTelemetry Protocol (OTLP) over gRPC
+      - 4318:4318 # OpenTelemetry Protocol (OTLP) over HTTP
+      - 16686:16686 # UI port
+      - 14269:14269 # collector admin port: health check at / and metrics at /metrics
+      - 9411:9411 # Zipkin compatible endpoint
     environment:
-      - 'GF_USERS_ALLOW_SIGN_UP=false'
-    volumes:
-      - './grafana/provisioning:/etc/grafana/provisioning'
-    depends_on:
-      - 'prometheus'
-    healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "3000" ]
-
-  alertmanager:
-    image: 'prom/alertmanager:v0.28.0'
-    container_name: 'alertmanager'
-    restart: 'unless-stopped'
-    ports:
-      - '9093:9093'
-    volumes:
-      - './alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml'
-    command: --config.file=/etc/alertmanager/alertmanager.yml
-    depends_on:
-      - 'prometheus'
-
-  mailhog:
-    image: 'mailhog/mailhog:v1.0.1'
-    container_name: 'mailhog'
-    restart: 'unless-stopped'
-    ports:
-      - '1025:1025'
-      - '8025:8025'
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
 
   app:
+    container_name: 'app'
     ports:
       - '8080:8080'
     depends_on:
       - postgresdb
-      # - filebeat
-      - grafana
+      - filebeat
+      - jaeger
+      # - grafana
     image: batch-processing
     build:
       context: .
